@@ -208,6 +208,12 @@ small{font-size:12.5px;color:var(--muted);line-height:1.45}
   border-radius:50%;background:var(--blue);border:2.5px solid #fff;box-shadow:0 1px 4px rgba(0,0,0,.35)}
 .maplabel{position:absolute;left:10px;top:10px;z-index:4;background:rgba(255,255,255,.94);border-radius:8px;
   padding:5px 10px;font-size:11.5px;font-weight:600;color:var(--navy);box-shadow:0 1px 4px rgba(10,37,64,.12)}
+.adjust{position:absolute;left:10px;bottom:10px;z-index:5;border:1px solid #BCC8D8;border-radius:11px;
+  padding:9px 14px;font:inherit;font-size:12.5px;font-weight:650;cursor:pointer;color:var(--blue);
+  background:linear-gradient(180deg,#FFFFFF 0%,#EEF2F8 100%);
+  box-shadow:0 3px 0 #C2CDDC, 0 5px 12px rgba(10,37,64,.24), inset 0 1px 0 #fff}
+.adjust:active{transform:translateY(3px);box-shadow:0 0 0 #C2CDDC, 0 2px 5px rgba(10,37,64,.24), inset 0 1px 0 #fff}
+.adjust.on{background:var(--blue);border-color:var(--blue-dk);color:#fff;box-shadow:0 3px 0 var(--blue-dk), 0 5px 12px rgba(19,88,216,.3)}
 .recentre{position:absolute;right:10px;bottom:10px;z-index:5;width:40px;height:40px;border-radius:12px;
   border:1px solid #BCC8D8;cursor:pointer;padding:0;display:flex;align-items:center;justify-content:center;
   background:linear-gradient(180deg,#FFFFFF 0%,#EEF2F8 100%);color:var(--blue);
@@ -391,12 +397,12 @@ small{font-size:12.5px;color:var(--muted);line-height:1.45}
   </div>
 
   <div class="pcard">
-    <h3>View</h3>
+    <h3>End users</h3>
     <div class="pick" id="viewPick"></div>
   </div>
 
   <div class="pcard">
-    <h3>Who is using it</h3>
+    <h3>Borrower persona</h3>
     <div class="pick" id="personaPick"></div>
   </div>
 
@@ -430,9 +436,9 @@ small{font-size:12.5px;color:var(--muted);line-height:1.45}
 <button class="fab" id="fab" aria-label="Demo settings" onclick="toggleSheet(true)">⚙</button>
 <div class="sheet" id="sheet" onclick="if(event.target===this)toggleSheet(false)">
   <div class="inner">
-    <h3>View</h3>
+    <h3>End users</h3>
     <div class="pick" id="viewPick2" style="margin-bottom:20px"></div>
-    <h3>Who is using it</h3>
+    <h3>Borrower persona</h3>
     <div class="pick" id="personaPick2" style="margin-bottom:20px"></div>
     <h3>What happens at adjudication</h3>
     <div class="pick" id="outcomePick2" style="margin-bottom:20px"></div>
@@ -471,8 +477,35 @@ const OUTCOMES = {
   face:{t:"Face mismatch",s:"Borderline — likely a shared device"},
   denied:{t:"Permission denied",s:"Customer declines location"}
 };
-let S = {p:"ravi", o:"pass", step:0, when:null, lang:null, audio:true, phase:"first", degraded:false, tries:1, ret:null, tech:false, view:"borrower", case:0, day:0, slot:null, pin:{x:.44,y:.58}};
+let S = {p:"ravi", o:"pass", step:0, when:null, lang:null, audio:true, phase:"first", degraded:false, tries:1, ret:null, tech:false, view:"borrower", case:0, unlock:undefined, day:0, slot:null, pin:{x:.44,y:.58}};
 const P = () => PERSONAS[S.p];
+const PLANS = {
+  ravi:[
+    {t:"Flat number",art:"home",c:"Hold still. I can see 402."},
+    {t:"Tower entrance",art:"tower",c:"Now the tower board, so we know which tower."},
+    {t:"Society gate",art:"street",c:"Step back and show me the society name."},
+    {t:"You",art:"face",c:"Now turn the phone to face you."}],
+  sunita:[
+    {t:"Signboard",art:"shop",c:"Hold still. I can read your shop board."},
+    {t:"Shopfront",art:"shop",c:"Step back so I can see the whole shop."},
+    {t:"The lane",art:"street",c:"Now show me the lane outside."},
+    {t:"You",art:"face",c:"Now turn the phone to face you."}],
+  ganesh:[
+    {t:"House number",art:"home",c:"Hold still. I can see the number."},
+    {t:"The street",art:"street",c:"Now step back and show me the street."},
+    {t:"You",art:"face",c:"Now turn the phone to face you."}],
+  meera:[
+    {t:"Front door",art:"home",c:"Hold still. I can see your door."},
+    {t:"The street",art:"street",c:"Step back a little. This one counts for your business too."},
+    {t:"You",art:"face",c:"Now turn the phone to face you."}],
+  bhaskar:[
+    {t:"Your house",art:"home",c:"Point at your house.   Hold it there.   Good."},
+    {t:"The school",art:"street",c:"Now show me the school beside your house."},
+    {t:"You",art:"face",c:"Now turn the phone towards yourself."}]
+};
+const HOMEPLAN = PLANS.ganesh;
+function planFor(){ return S.phase==='second' ? HOMEPLAN : (PLANS[S.p]||HOMEPLAN); }
+function stepDur(){ return S.p==='bhaskar' ? 3.4 : 2.6; }
 function ret(d){return (S.ret===undefined||S.ret===null)?d:S.ret;}
 
 /* ============ panel ============ */
@@ -489,7 +522,7 @@ function chips(){
 }
 function setV(v){toggleSheet(false);S.view=v;go(v==='ops'?26:25);chips();}
 function toggleSheet(open){document.getElementById('sheet').classList.toggle('open',open);}
-function setP(k){toggleSheet(false);S.view='borrower';S.p=k;S.lang=null;S.audio=true;S.tries=1;S.anchor=undefined;S.ret=null;S.tech=false;S.degraded=false;S.phase="first";S.when=null;S.slot=null;go(25);chips();}
+function setP(k){toggleSheet(false);S.view='borrower';S.p=k;S.lang=null;S.audio=true;S.tries=1;S.anchor=undefined;S.ret=null;S.tech=false;S.unlock=undefined;S.degraded=false;S.phase="first";S.when=null;S.slot=null;go(25);chips();}
 function setO(k){toggleSheet(false);S.o=k;go(S.step<3?S.step:25);chips();}
 function note(b,t){const e=document.getElementById('note'); if(e) e.innerHTML=`<b>${b}</b><p>${t}</p>`;}
 
@@ -532,23 +565,42 @@ function street(){
 }
 function viewfinder(kind, blurry){
   const b = blurry ? 'opacity=".55"' : '';
-  const plate = `<rect x="126" y="150" width="88" height="34" rx="4" fill="#0A2540" ${b}/>
-    <rect x="134" y="158" width="46" height="6" rx="3" fill="#fff" ${b}/>
-    <rect x="134" y="170" width="30" height="5" rx="2.5" fill="#7E93AE" ${b}/>`;
-  const sign = `<rect x="86" y="118" width="168" height="40" rx="4" fill="#1358D8" ${b}/>
+  const sky = `<rect width="340" height="390" fill="#1B2942"/><rect x="0" y="250" width="340" height="140" fill="#243452"/>`;
+  if(kind==='shop') return `<svg viewBox="0 0 340 390" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">${sky}
+    <rect x="60" y="70" width="220" height="200" rx="4" fill="#33425F" ${b}/>
+    <rect x="86" y="118" width="168" height="40" rx="4" fill="#1358D8" ${b}/>
     <rect x="100" y="132" width="86" height="9" rx="4" fill="#fff" ${b}/>
-    <rect x="100" y="146" width="52" height="6" rx="3" fill="#9DC0F5" ${b}/>`;
-  return `<svg viewBox="0 0 340 390" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-  <rect width="340" height="390" fill="#1B2942"/>
-  <rect x="0" y="250" width="340" height="140" fill="#243452"/>
-  <rect x="60" y="70" width="220" height="200" rx="4" fill="#33425F" ${b}/>
-  ${kind==='shop'
-    ? sign + `<rect x="104" y="186" width="132" height="84" rx="3" fill="#4A5A78" ${b}/>
-              <rect x="112" y="196" width="116" height="6" rx="3" fill="#6C7E9C" ${b}/>`
-    : `<rect x="120" y="96" width="100" height="174" rx="4" fill="#4A5A78" ${b}/>` + plate +
-      `<circle cx="204" cy="212" r="5" fill="#8FA3C2" ${b}/>`}
-  <rect x="0" y="326" width="340" height="64" fill="#2C3C58"/>
-  </svg>`;
+    <rect x="100" y="146" width="52" height="6" rx="3" fill="#9DC0F5" ${b}/>
+    <rect x="104" y="186" width="132" height="84" rx="3" fill="#4A5A78" ${b}/>
+    <rect x="112" y="196" width="116" height="6" rx="3" fill="#6C7E9C" ${b}/>
+    <rect x="0" y="326" width="340" height="64" fill="#2C3C58"/></svg>`;
+  if(kind==='tower') return `<svg viewBox="0 0 340 390" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">${sky}
+    <rect x="70" y="26" width="200" height="244" rx="4" fill="#33425F" ${b}/>
+    ${[0,1,2,3,4].map(r=>[0,1,2,3].map(c=>
+      `<rect x="${88+c*44}" y="${44+r*42}" width="30" height="26" rx="2" fill="#4A5A78" ${b}/>`).join('')).join('')}
+    <rect x="118" y="272" width="104" height="34" rx="4" fill="#0A2540" ${b}/>
+    <rect x="132" y="284" width="52" height="10" rx="4" fill="#fff" ${b}/>
+    <rect x="0" y="326" width="340" height="64" fill="#2C3C58"/></svg>`;
+  if(kind==='street') return `<svg viewBox="0 0 340 390" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">${sky}
+    ${[[10,140],[74,110],[140,158],[208,124],[272,146]].map(([x,h])=>
+      `<rect x="${x}" y="${270-h}" width="56" height="${h}" rx="3" fill="#3A4A67" ${b}/>`).join('')}
+    <rect x="150" y="188" width="48" height="18" rx="3" fill="#1358D8" ${b}/>
+    <rect x="0" y="270" width="340" height="120" fill="#2C3C58"/>
+    <path d="M0 320h340" stroke="#3F4F6C" stroke-width="26"/>
+    <path d="M0 320h340" stroke="#54657F" stroke-width="2" stroke-dasharray="16 14"/></svg>`;
+  if(kind==='face') return `<svg viewBox="0 0 340 390" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+    <rect width="340" height="390" fill="#22314C"/>
+    <circle cx="170" cy="150" r="58" fill="#4A5A78" ${b}/>
+    <path d="M78 330c0-52 41-84 92-84s92 32 92 84z" fill="#4A5A78" ${b}/>
+    <ellipse cx="170" cy="175" rx="96" ry="126" fill="none" stroke="#7E93AE" stroke-width="2" stroke-dasharray="8 8"/></svg>`;
+  return `<svg viewBox="0 0 340 390" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">${sky}
+    <rect x="60" y="70" width="220" height="200" rx="4" fill="#33425F" ${b}/>
+    <rect x="120" y="96" width="100" height="174" rx="4" fill="#4A5A78" ${b}/>
+    <rect x="126" y="150" width="88" height="34" rx="4" fill="#0A2540" ${b}/>
+    <rect x="134" y="158" width="46" height="6" rx="3" fill="#fff" ${b}/>
+    <rect x="134" y="170" width="30" height="5" rx="2.5" fill="#7E93AE" ${b}/>
+    <circle cx="204" cy="212" r="5" fill="#8FA3C2" ${b}/>
+    <rect x="0" y="326" width="340" height="64" fill="#2C3C58"/></svg>`;
 }
 
 /* ============ screens ============ */
@@ -781,7 +833,7 @@ SCREENS[5] = () => ({
   note:["Consent as a real screen","Itemised, plain language, with retention stated. This is where RBI's one-time camera and location access is actually obtained — and where telling the customer the shape of the task lifts completion more than any visual polish."],
   html:head(3,"Step 2 of 4",50)+`<div class="pad">
     <h1>What we collect, and why</h1>
-    <p style="margin-bottom:18px">Only what this one check needs. Nothing else on your phone.</p>
+    <p style="margin-bottom:18px">We collect the following items and nothing else from your phone.</p>
     <div class="card" style="padding:6px 16px">
       <div class="crow"><span class="ci">◉</span><div><b>Your camera, once</b>
         <span>A short video of the outside of your premises, taken now. Not your photo gallery, and nothing is saved onto your phone.</span></div></div>
@@ -817,7 +869,7 @@ SCREENS[6] = () => {
       <div class="chk ok"><span class="st">✓</span>Camera available<em>Ready</em></div>
       <div class="chk ${denied?'no':'ok'}"><span class="st">${denied?'!':'✓'}</span>Location permission<em>${denied?'Refused':'Granted'}</em></div>
       <div class="chk ok"><span class="st">✓</span>GPS accuracy<em>${denied?'—':'6 m'}</em></div>
-      <div class="chk ${low?'no':'ok'}"><span class="st">${low?'!':'✓'}</span>Phone and connection<em>${low?'Older phone, weak signal':'Good'}</em></div>
+      <div class="chk ${low?'no':'ok'}"><span class="st">${low?'!':'✓'}</span>Phone and connection<em>${low?'Cannot record video reliably':'Good'}</em></div>
     </div>
     ${denied?`
       <div class="card warn" style="margin-top:12px;padding:15px 16px">
@@ -833,7 +885,7 @@ SCREENS[6] = () => {
     : low?`
       <div class="card tint" style="margin-top:12px">
         <b style="font-size:14.5px">We will use photos instead of video</b>
-        <p style="margin:6px 0 0;font-size:13.5px;color:var(--ink)">Recording video would be heavy for your phone and your signal, so we will take three quick photos instead. It works exactly the same for you, and nothing is saved onto your phone.</p>
+        <p style="margin:6px 0 0;font-size:13.5px;color:var(--ink)">Your phone would have to record and send video at the same time, and on this connection it may stop partway. Photos are lighter, so we will use those. It works exactly the same for you.</p>
       </div>
       <div style="margin-top:16px"><button class="btn" onclick="S.degraded=true;go(7)">Continue</button></div>`
     :`<div style="margin-top:18px"><button class="btn" onclick="go(7)">Continue</button></div>`}
@@ -870,6 +922,9 @@ function refreshPin(){
 function initPin(){
   const box=document.getElementById('mapbox'), pin=document.getElementById('pin');
   if(!box||!pin) return;
+  if(S.unlock===undefined) S.unlock = !geoOf().r;
+  pin.style.cursor = S.unlock ? 'grab' : 'default';
+  if(!S.unlock){ pin.style.left=(S.pin.x*100)+"%"; pin.style.top=(S.pin.y*100)+"%"; return; }
   const place=()=>{pin.style.left=(S.pin.x*100)+"%"; pin.style.top=(S.pin.y*100)+"%";};
   place();
   let on=false;
@@ -891,8 +946,10 @@ function initPin(){
   pin.addEventListener('mousedown',down); pin.addEventListener('touchstart',down,{passive:false});
   box.addEventListener('mousemove',move); box.addEventListener('touchmove',move,{passive:false});
   window.addEventListener('mouseup',up); box.addEventListener('touchend',up);
-  box.addEventListener('click',e=>{if(e.target.closest('.pin')||e.target.closest('.recentre'))return;at(e);});
+  box.addEventListener('click',e=>{
+    if(e.target.closest('.pin')||e.target.closest('.recentre')||e.target.closest('.adjust'))return; at(e);});
 }
+function toggleAdjust(){ S.unlock=!S.unlock; go(7); }
 function recentre(){S.pin={x:HOME.x,y:HOME.y};initPin();refreshPin();
   const e=document.getElementById('edge'); if(e) e.classList.remove('show');}
 function popDigipin(open){const e=document.getElementById('dpPop'); if(e) e.style.display=open?'block':'none';}
@@ -905,8 +962,8 @@ SCREENS[7] = () => {
     p.prem==='both'
     ? "Meera's declared home and business addresses are identical, so the flow says so and collapses two tasks into one. She is told explicitly that she will not be asked again."
     : (geoOf().r
-      ? "The ring is sized by how well we could place the address on a map, not by a fixed number. Inside it the pin moves freely; past the edge this stops being an adjustment and becomes an address correction. Switch to Bhaskar to see what happens when the geocode is worthless."
-      : "Bhaskar's village address cannot be geocoded to anything better than a PIN centroid, so there is no ring at all — constraining him would reject a man standing at his own front door. The pin here is worth more as navigation for collections than as geometric proof, and assurance comes from matching his address text against Aadhaar instead.")],
+      ? "The pin is locked until the customer deliberately taps Adjust, so it cannot be nudged by accident. When unlocked it moves freely inside the ring, which is sized by how well the address could be placed on a map. And a pin-versus-capture mismatch is a quality prompt, never a fraud flag - a fraudster pins wherever they are standing, so that check catches mistakes, not intent. Switch to Bhaskar to see what happens when the geocode is worthless."
+      : "Bhaskar's pin starts unlocked, because a postal centroid has to be corrected. His village address cannot be geocoded to anything better than a PIN centroid, so there is no ring at all — constraining him would reject a man standing at his own front door. The pin here is worth more as navigation for collections than as geometric proof, and assurance comes from matching his address text against Aadhaar instead.")],
   init: initPin,
   html:head(6,"Step 4 of 4",100)+`<div class="pad">
     <h1>Point at your ${which==='shop'?'shop':'door'}</h1>
@@ -919,20 +976,23 @@ SCREENS[7] = () => {
       We will record this once. You will not be asked a second time.</small></div>`:''}
     <div class="map" id="mapbox">
       ${street()}
-      <div class="maplabel">${geoOf().r?`Drag the pin to your ${which==='shop'?'shop entrance':'front door'}`:'Place the pin on your house'}</div>
+      <div class="maplabel">${!S.unlock ? 'We have placed the pin at your address'
+        : (geoOf().r?`Drag the pin to your ${which==='shop'?'shop entrance':'front door'}`:'Place the pin on your house')}</div>
       ${geoOf().r?`<div class="ring" style="left:44%;top:58%;width:${(geoOf().r*200).toFixed(0)}%;height:${(geoOf().r*236).toFixed(0)}%"></div>`:''}
       <div class="gpsdot" style="left:41.5%;top:61%"><span class="acc"></span><span class="core"></span></div>
       <svg class="pin" id="pin" width="17" height="23" viewBox="0 0 34 46" aria-hidden="true">
         <path d="M17 1.5c8.5 0 15.5 7 15.5 15.5 0 11.6-15.5 27.5-15.5 27.5S1.5 28.6 1.5 17C1.5 8.5 8.5 1.5 17 1.5z" fill="#1358D8" stroke="#fff" stroke-width="2.2"/>
         <circle cx="17" cy="17" r="5.2" fill="#fff"/></svg>
       <div class="edge" id="edge">That is well outside the area on your application. If the address itself is wrong, report it below.</div>
-      <button class="recentre" onclick="recentre()" aria-label="Reset the pin to your declared address" title="Reset to declared address">
+      <button class="adjust ${S.unlock?'on':''}" onclick="toggleAdjust()">${S.unlock?'Done':'Adjust pin'}</button>
+      ${S.unlock?`<button class="recentre" onclick="recentre()" aria-label="Reset the pin to your declared address" title="Reset to declared address">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
           <circle cx="12" cy="12" r="6.5"/><circle cx="12" cy="12" r="1.6" fill="currentColor" stroke="none"/>
           <path d="M12 1.5v4M12 18.5v4M1.5 12h4M18.5 12h4"/></svg>
-      </button>
+      </button>`:''}
     </div>
-    <small id="dpDist" style="display:block;margin-top:9px">${!geoOf().r?geoOf().hint:(m.dist<4?"Within 4 m of your declared address — the size of one DIGIPIN square":m.dist+" m from the address on your application")}</small>
+    <small style="display:block;margin-top:9px;color:${S.unlock?'var(--blue)':'var(--muted)'}">${S.unlock?'Move the pin only if it is not on your door. Being a little off is not a problem — we will ask you to check, not turn you away.':''}</small>
+    <small id="dpDist" style="display:block;margin-top:${S.unlock?'4':'9'}px">${!geoOf().r?geoOf().hint:(m.dist<4?"Within 4 m of your declared address — the size of one DIGIPIN square":m.dist+" m from the address on your application")}</small>
     <div class="dpwrap">
       <div class="dpcard">
         <span class="seal"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="1.7" fill="currentColor" stroke="none"/><path d="M12 2v3.5M12 18.5V22M2 12h3.5M18.5 12H22"/></svg></span>
@@ -961,9 +1021,9 @@ SCREENS[8] = () => {
   note:["Show, don't tell","A good example and a bad one, before the camera opens. Illustrations work for low literacy in any language — this is the cheapest defence against the single most common rejection reason."],
   html:head(7,"Recording")+`<div class="pad">
     <h1>What we need to see</h1>
-    <p>${S.degraded?'Three quick photos':'One slow sweep, about ten seconds'}. Start close, then step back.</p>
+    <p>${S.degraded?planFor().length+' quick photos':'One slow sweep, about '+Math.round(planFor().length*stepDur())+' seconds'}. ${planFor().map(f=>f.t.toLowerCase()).join(', ')}.</p>
     ${S.degraded?'':`<div class="card tint" style="margin:0 0 14px"><small>
-      We record a short video and take three clear photos along the way. You only have to do it once — just pause when we ask you to hold still.</small></div>`}
+      We record a short video and take ${planFor().length} clear photos along the way. You only have to do it once — just pause when we ask you to hold still.</small></div>`}
     <div style="display:flex;gap:10px;margin:18px 0 6px;align-items:stretch">
       <div class="card good" style="flex:1;padding:12px">
         <div style="height:74px;border-radius:8px;background:#fff;border:1px solid #C6E5D6;display:flex;align-items:center;justify-content:center">
@@ -991,23 +1051,29 @@ SCREENS[8] = () => {
 SCREENS[9] = () => {
   const shop = (P().prem==='shop' && S.phase!=='second');
   const blur = S.o==='quality';
+  const pl = planFor();
   return {
-  note:["One action, two artifacts","Nothing records until they tap, so they can position themselves first. The video then runs continuously as continuity evidence, and on each 'hold still' beat the phone silently takes a full-resolution photo — those are what OCR, distance and face checks actually run on."],
+  note:["The same journey, a different frame set",
+    S.p==='ravi' ? "Ravi's address is hierarchical - flat, tower, society - so his capture is a chain of three reads, one per component. The tower is the part that actually matters: GPS cannot separate floors, but a collections agent given the right tower can find him."
+    : S.p==='sunita' ? "Sunita leads on the signboard, because the business name read off the board and matched against her GSTIN trade name is a stronger anchor here than any coordinate."
+    : S.p==='bhaskar' ? "No door plate is assumed - many rural houses have no number. His second frame is the landmark named in his own address, which is the part of a rural address that is actually mappable. The pacing is slower and the words are shorter."
+    : S.p==='meera' ? "Three frames, and the guidance says out loud that this one counts for her business too - so she is never left wondering whether a second task is coming."
+    : "Three frames, the baseline residential set. Nothing records until they tap, so they can position themselves first."],
   html:`<div class="topbar"><span class="crumb">Recording ${shop?'your shop':'your door'}</span></div>
   <div class="pad" style="padding-top:8px">
     <div class="view">
-      ${viewfinder(shop?'shop':'home', blur)}
+      <div id="vfart">${viewfinder(pl[0].art, blur)}</div>
       <div class="frameline"></div>
       <div class="flash" id="flash"></div>
-      <div class="shots" id="shots">0 of 3 photos</div>
+      <div class="shots" id="shots">0 of ${pl.length} photos</div>
       <div class="recdot"><i></i><span id="rt">0:00</span></div>
       <div class="ready" id="ready">
-        <p>Stand where you can see your ${shop?'signboard':'door number'}, then start when you are ready.</p>
+        <p>${pl.length} short shots, about ${Math.round(pl.length*stepDur())} seconds. Stand where you can see your ${shop?'signboard':(S.p==='bhaskar'?'house':'door number')}, then start when you are ready.</p>
         <button onclick="beginRecording()">Start recording</button>
       </div>
       <button class="cancel" id="cancelb" onclick="cancelCapture()" style="display:none">Stop</button>
       <button class="mute" id="muteBtn" onclick="flipAudio()" style="opacity:${S.audio?'1':'.6'}">♪ Sound ${S.audio?'on':'off'}</button>
-      <div class="guide"><span class="spk" id="spk" style="opacity:${S.audio?'1':'.35'}">♪</span><p id="cap">Hold still. I can see the ${shop?'signboard':'number'}.</p></div>
+      <div class="guide"><span class="spk" id="spk" style="opacity:${S.audio?'1':'.35'}">♪</span><p id="cap">${pl[0].c}</p></div>
     </div>
     <div class="track"><span id="tk"></span></div>
     <small style="display:block;margin-top:12px" id="hint">Take your time. Nothing starts until you tap.</small>
@@ -1242,7 +1308,20 @@ SCREENS[19] = () => ({
 
 /* 21 — review before submitting */
 function thumbArt(kind){
-  if(kind==='plate') return `<svg viewBox="0 0 100 82"><rect width="100" height="82" fill="#243452"/>
+  if(kind==='tower') return `<svg viewBox="0 0 100 82"><rect width="100" height="82" fill="#243452"/>
+    <rect x="24" y="8" width="52" height="60" rx="3" fill="#4A5A78"/>
+    ${[0,1,2].map(r=>[0,1,2].map(c=>`<rect x="${31+c*15}" y="${15+r*17}" width="10" height="10" rx="1.5" fill="#6C7E9C"/>`).join('')).join('')}
+    <rect x="38" y="68" width="24" height="10" rx="2" fill="#0A2540"/></svg>`;
+  if(kind==='street') return `<svg viewBox="0 0 100 82"><rect width="100" height="82" fill="#243452"/>
+    <rect x="0" y="56" width="100" height="26" fill="#33425F"/>
+    <rect x="6" y="24" width="22" height="32" rx="2" fill="#4A5A78"/>
+    <rect x="34" y="14" width="28" height="42" rx="2" fill="#5B6B89"/>
+    <rect x="68" y="28" width="26" height="28" rx="2" fill="#4A5A78"/></svg>`;
+  if(kind==='shop') return `<svg viewBox="0 0 100 82"><rect width="100" height="82" fill="#243452"/>
+    <rect x="18" y="16" width="64" height="56" rx="3" fill="#4A5A78"/>
+    <rect x="26" y="24" width="48" height="14" rx="2" fill="#1358D8"/>
+    <rect x="32" y="29" width="24" height="4" rx="2" fill="#fff"/></svg>`;
+  if(kind==='home' || kind==='plate') return `<svg viewBox="0 0 100 82"><rect width="100" height="82" fill="#243452"/>
     <rect x="26" y="14" width="48" height="60" rx="3" fill="#4A5A78"/><rect x="34" y="26" width="32" height="14" rx="2" fill="#0A2540"/>
     <rect x="38" y="31" width="16" height="3" rx="1.5" fill="#fff"/><circle cx="66" cy="54" r="3" fill="#8FA3C2"/></svg>`;
   if(kind==='wide') return `<svg viewBox="0 0 100 82"><rect width="100" height="82" fill="#243452"/>
@@ -1252,7 +1331,6 @@ function thumbArt(kind){
     <circle cx="50" cy="34" r="15" fill="#7E8FAD"/><path d="M24 82c0-15 12-24 26-24s26 9 26 24z" fill="#7E8FAD"/></svg>`;
 }
 SCREENS[21] = () => {
-  const shop=(P().prem==='shop'&&S.phase!=='second');
   return {
   note:["See it before it goes",
     "Nobody should send pictures of their home without seeing them. Retake is available, but every attempt is retained and counted server-side — so review is a courtesy to the customer, not free rerolls for a fraudster."],
@@ -1260,12 +1338,10 @@ SCREENS[21] = () => {
     <h1>Here is what we captured</h1>
     <p>Have a look. If something is off, record it again.</p>
     <div class="thumbs">
-      <div class="thumb">${thumbArt('plate')}<small>${shop?'Signboard':'Door number'}</small></div>
-      <div class="thumb">${thumbArt('wide')}<small>The street</small></div>
-      <div class="thumb">${thumbArt('face')}<small>You</small></div>
+      ${planFor().map(f=>`<div class="thumb">${thumbArt(f.art)}<small>${f.t}</small></div>`).join('')}
     </div>
     <div class="card" style="margin-top:10px">
-      <div class="row" style="margin-bottom:9px"><div class="ic">▷</div><div><b>10 second video</b><span>Recorded in one take, just now</span></div></div>
+      <div class="row" style="margin-bottom:9px"><div class="ic">▷</div><div><b>${Math.round(planFor().length*stepDur())} second video</b><span>Recorded in one take, just now</span></div></div>
       <div class="row" style="margin-bottom:0"><div class="ic">⛨</div><div><b>Not saved to your phone</b><span>Sent straight to us, encrypted. Nothing is added to your gallery or left behind</span></div></div>
     </div>
     <small style="display:block;margin-top:11px">Attempt ${S.tries||1} of 3. Every attempt is kept on our side, including ones you replace.</small>
@@ -1511,30 +1587,26 @@ function runRecording(){
   const cap=document.getElementById('cap'), tk=document.getElementById('tk'),
         rt=document.getElementById('rt'), hint=document.getElementById('hint');
   if(!cap) return;
-  const shop=(P().prem==='shop'&&S.phase!=='second');
-  const lines=[
-    `Hold still. I can see the ${shop?'signboard':'number'}.`,
-    "Good. Now step back slowly.",
-    "Keep going — show me the street.",
-    "Almost done. Hold it there.",
-    "Now turn the phone to face you."
-  ];
-  const shotAt=[1.6,7.6,9.6]; let shots=0;
-  let i=0,t=0;
+  const pl=planFor(), dur=stepDur(), total=pl.length*dur;
+  let i=0, t=0, shots=0;
   const iv=setInterval(()=>{
     t+=0.4;
     if(!document.getElementById('tk')){clearInterval(iv);return;}
-    tk.style.width=Math.min(100,t/10*100)+"%";
+    tk.style.width=Math.min(100,t/total*100)+"%";
     rt.textContent="0:"+String(Math.floor(t)).padStart(2,'0');
-    const step=Math.floor(t/2);
-    if(step!==i&&step<lines.length){i=step;cap.textContent=lines[i];}
-    if(shots<shotAt.length && t>=shotAt[shots]){
+    const step=Math.min(pl.length-1, Math.floor(t/dur));
+    if(step!==i){
+      i=step; cap.textContent=pl[i].c;
+      const a=document.getElementById('vfart');
+      if(a) a.innerHTML=viewfinder(pl[i].art, S.o==='quality');
+    }
+    if(shots<pl.length && t >= (shots+1)*dur - 0.6){
       shots++;
       const f=document.getElementById('flash'), sh=document.getElementById('shots');
       if(f){f.style.opacity='.85';setTimeout(()=>{f.style.opacity='0';},130);}
-      if(sh) sh.textContent=shots+" of 3 photos";
+      if(sh) sh.textContent=shots+" of "+pl.length+" photos";
     }
-    if(t>=10){clearInterval(iv);hint.textContent="Recorded.";setTimeout(()=>go(21),450);}
+    if(t>=total){clearInterval(iv);hint.textContent="Recorded.";setTimeout(()=>go(21),450);}
   },400);
   window._cap=iv;
 }
