@@ -16,14 +16,6 @@ So the manual step worth removing isn't a field visit — it's that review.
 
 ---
 
-## What's here
-
-| File | What it is |
-|---|---|
-| `index.html` | Interactive prototype. Self-contained, no build step, no network calls |
-| `premises-verification.pptx` | 7-slide proposal plus 3 appendix slides |
-| `presentation-script.md` | Delivery script with timings, demo path, and anticipated questions |
-
 ## Running the prototype
 
 Open `index.html` in a browser. That's it — no dependencies, and it works offline.
