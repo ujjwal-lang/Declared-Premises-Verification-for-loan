@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Loans24 · Premises verification prototype</title>
+<title>· Self-serve Premises verification prototype</title>
 <style>
 :root{
   --navy:#0A2540; --blue:#1358D8; --blue-dk:#0F47AE; --blue-tint:#E8F0FE;
@@ -427,7 +427,7 @@ small{font-size:12.5px;color:var(--muted);line-height:1.45}
     </ul>
   </div>
   <p style="font-size:11.5px;color:var(--muted);margin-top:4px">
-    Unofficial concept built for a product case discussion. Not affiliated with or endorsed by Loans24 or Cars24;
+    Unofficial concept built for a product case discussion. Not affiliated with or endorsed by any company;
     no brand assets are reproduced.
   </p>
 </div>
@@ -625,7 +625,7 @@ SCREENS[25] = () => ({
     <div class="msghdr">
       <button class="bk" aria-label="Back">‹</button>
       <span class="av">L</span>
-      <span class="who"><b>Loans24 <span class="vtick">✓</span></b><small>Business account · +91 92••• ••024</small></span>
+      <span class="who"><b> <span class="vtick">✓</span></b><small>Business account · +91 92••• ••024</small></span>
     </div>
 
     <div class="msgbody">
@@ -648,12 +648,12 @@ SCREENS[25] = () => ({
           </div>
           <div class="lk">
             <b>Verify your address</b>
-            <span>verify.loans24.co.in/v/4471902</span>
+            <span>verify.xyz_company.co.in/v/4471902</span>
             <span class="go">Open and start ›</span>
           </div>
         </button>
 
-        <p style="font-size:13px;color:var(--muted)">You will need to be standing at the address when you do it. You can also start this from the Loans24 app or our website.</p>
+        <p style="font-size:13px;color:var(--muted)">You will need to be standing at the address when you do it. You can also start this from our app or our website.</p>
 
         <div class="safety"><span class="si">⚠</span><div>
           <b>Staying safe</b>
@@ -677,8 +677,8 @@ SCREENS[0] = () => ({
   html:`<div class="pad" style="flex:1;display:flex;flex-direction:column">
     <div style="display:flex;align-items:center;gap:10px;margin-bottom:26px">
       <div style="width:32px;height:32px;border-radius:9px;background:var(--blue);display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;font-size:15px">L</div>
-      <b style="font-size:19px;letter-spacing:-.02em">Loans24</b>
-      <span style="margin-left:auto;font-size:11px;color:var(--muted)">🔒 verify.loans24.co.in</span>
+      <b style="font-size:19px;letter-spacing:-.02em">xyz_company</b>
+      <span style="margin-left:auto;font-size:11px;color:var(--muted)">🔒 verify.xyz_company.co.in</span>
     </div>
     <div style="margin:6px 0 22px">${ART_DOOR}</div>
     <h1>Verify your address<br>without waiting for anyone</h1>
@@ -732,7 +732,7 @@ SCREENS[2] = () => {
   note:["The pending task","The task is stated as one sentence with a time estimate and a deadline. The customer should never have to ask a sales rep what is expected of them."],
   html:`<div class="pad">
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px">
-      <b style="font-size:18px;letter-spacing:-.02em">Loans24</b>
+      <b style="font-size:18px;letter-spacing:-.02em">xyz_company</b>
       <button class="avatar" onclick="go(18)" aria-label="Your account">${p.name[0]}</button>
     </div>
     <div class="card" style="background:var(--navy);border:0;color:#fff;padding:18px">
@@ -1150,7 +1150,7 @@ SCREENS[12] = () => ({
     <div style="width:52px;height:52px;border-radius:50%;background:var(--blue-tint);display:flex;align-items:center;justify-content:center;margin-bottom:14px">
       <span style="color:var(--blue);font-size:24px">☏</span></div>
     <h1>Let's do this together</h1>
-    <p>Someone from Loans24 will call and walk you through it while you hold the phone. It takes the same two minutes.</p>
+    <p>Someone from our company will call and walk you through it while you hold the phone. It takes the same two minutes.</p>
     <div class="card" style="margin-top:16px">
       <div class="row"><div class="ic">✓</div><div><b>Your application is not affected</b><span>This is a different way to finish, not a rejection</span></div></div>
       <div class="row" style="margin-bottom:0"><div class="ic">✓</div><div><b>Nothing changes about the check</b><span>They guide you; the same automatic checks run either way</span></div></div>
@@ -1409,7 +1409,7 @@ const CASES=[
 SCREENS[26] = () => ({
   note:["Where the machine's output actually lives",
     "A separate surface for credit ops, not a panel inside the borrower's app. The queue is the argument: every row is already decided. Ops watches the zero-touch rate, audits a sample, and handles only what the machine could not settle - oversight of the system rather than adjudication of photographs."],
-  html:`<div class="opshdr"><b>Loans24 Credit Ops</b><small>Address verification</small></div>
+  html:`<div class="opshdr"><b>Credit Ops</b><small>Address verification</small></div>
   <div class="tabs"><button class="on">Queue</button><button onclick="go(28)">Analytics</button></div>
   <div class="opsstats">
     <div class="opsstat"><b>312</b><span>Submitted today</span></div>
@@ -1493,7 +1493,7 @@ function legend(items){
 SCREENS[28] = () => ({
   note:["Only the metrics this case argues for",
     "Four charts, each tied to an objective in the brief. First-time-right is the headline. The funnel shows where people actually leak. The reason-code mix tells you what to fix next and is what threshold tuning runs on. And the completion gap is the fairness tripwire - the one that catches you quietly excluding tier-3 users while the headline number looks healthy."],
-  html:`<div class="opshdr"><b>Loans24 Credit Ops</b><small>Address verification</small></div>
+  html:`<div class="opshdr"><b>Credit Ops</b><small>Address verification</small></div>
   <div class="tabs"><button onclick="go(26)">Queue</button><button class="on">Analytics</button></div>
   <div class="pad" style="padding-top:16px">
 
